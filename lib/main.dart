@@ -1,15 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:meals_app/dummy_data.dart';
+import 'package:meals_app/models/meal.dart';
 import 'package:meals_app/screens/categories_screen.dart';
 import 'package:meals_app/screens/category_meals_screen.dart';
 import 'package:meals_app/screens/filters_screen.dart';
 import 'package:meals_app/screens/meal_detail_screen.dart';
 import 'package:meals_app/screens/tabs_screen.dart';
 
-void main() {
-  runApp(MyApp());
+void main() => runApp(MyApp());
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
 }
 
-class MyApp extends StatelessWidget {
+class _MyAppState extends State<MyApp> {
+  Map<String, bool> _filters = {
+    'gluten': false,
+    'lactose': false,
+    'vegan': false,
+    'vegetarian': false,
+  };
+
+  List<Meal> _availableMeals = DUMMY_MEALS;
+
+  void _setFilters(Map<String, bool> filterData) {
+    print(filterData);
+    setState(() {
+      _filters = filterData;
+
+      _availableMeals = DUMMY_MEALS.where((element) {
+        if (_filters['gluten'] && !element.isGlutenFree) return false;
+        if (_filters['lactose'] && !element.isLactoseFree) return false;
+        if (_filters['vegan'] && !element.isVegan) return false;
+        if (_filters['vegetarian'] && !element.isVegetarian) return false;
+        return true;
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,9 +65,11 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/': (_) => TabsScreen(),
-        CategoryMealsScreen.routeName: (_) => CategoryMealsScreen(),
+        CategoryMealsScreen.routeName: (_) =>
+            CategoryMealsScreen(availableMeals: _availableMeals),
         MealDetailScreen.routeName: (_) => MealDetailScreen(),
-        FiltersScreen.routeName: (_) => FiltersScreen()
+        FiltersScreen.routeName: (_) =>
+            FiltersScreen(currentFilters: _filters, saveFilters: _setFilters)
       },
       onGenerateRoute: (settings) {
         print(settings.arguments);
